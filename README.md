@@ -51,6 +51,34 @@ npm install express mongoose cors dotenv
 ```
 
    After running this command, a `package-lock.json`  file and a `node_modules`  folder will be automatically generated.
+   Don't forget to add `"type": "module" `, add this for abling the nodemon to run your server `dev`: `npx nodemon` for enabling the use ` import` and ` export` of and  in your `package.json` file.
+   
+   //* Correct file for `package.json` 
+   ```
+     {
+       "name": "server",
+       "version": "1.0.0",
+       "description": "",
+       "main": "server.js",
+       "scripts": {
+         "test": "echo \"Error: no test specified\" && exit 1",
+         "start": "node server.js",
+         "dev": "npx nodemon"
+      },
+       "keywords": [],
+       "author": "",
+       "license": "ISC",
+       "type": "module",
+      "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "mongoose": "^8.13.0",
+        "nodemon": "^3.1.9"
+     }
+   }
+
+   ```
 
 5. **Create A Modularization Structure:**
    Create the following folders inside the server folder manually or Git Bash commands :
@@ -111,7 +139,7 @@ npm install express mongoose cors dotenv
            await connect(MONGO_URI, {
                dbName: DB,
            });
-           console.log("Pinged your deployment. You successfully connected to MongoDB!");
+           console.log(`Pinged your deployment. You successfully connected to MongoDB! and your DB is : ${DB}`);
        } catch (error) {
            console.log(error);
            throw error;
@@ -141,31 +169,31 @@ const TaskSchema = new Schema(
         title: {
             type: String, // * Data type for the task title
             //* Validation for task title
-            required: [true, "Title of Task is required"],
-            minLength: [3, "Title of Task must be at least 3 characters long!"],
-            maxLength: [120, "Title of Task must be at most 120 characters long!"],
+            required: [true, "{PATH} of Task is required"],
+            minLength: [3, "{PATH} of Task must be at least 3 characters long!"],
+            maxLength: [120, "{PATH} of Task must be at most 120 characters long!"],
         },
         //* Task Description
         description: {
             type: String, // * Data type for the task description
             //* Validation for task description
-            required: [true, "Description of Task is required"],
-            minLength: [3, "Description of Task must be at least 3 characters long!"],
-            maxLength: [500, "Description of Task must be at most 500 characters long!"],
+            required: [true, "{PATH} of Task is required"],
+            minLength: [3, "{PATH} of Task must be at least 3 characters long!"],
+            maxLength: [500, "{PATH} of Task must be at most 500 characters long!"],
         },
         //* Task Status
         status: {
             type: String, // * Data type for the task status
             enum: ['Not Started', 'In Progress', 'Completed'], // * Valid values for task status
-            required: [true, "Status of Task is required"],
+            required: [true, "{PATH} of Task is required"],
             default: 'Not Started', // * Default value for task status
         },
         //* Due Date
         dueDate: {
             type: Date, // * Data type for the task due date
             //* Validation for task due date
-            required: [true, "Due Date of Task is required"],
-            min: [Date.now(), "Due Date must be a future date"],
+            required: [true, "{PATH} of Task is required"],
+            min: [Date.now(), "{PATH} must be a future date"],
         },
     },
     {
@@ -201,136 +229,174 @@ import Task from "../models/task.model.js";
 * @param {Object} res - The HTTP response object, used to send a response to the client.
 **/
 
-//? CREATE A NEW TASK FEATURE
-async function createTask(req, res) {
-    try {
-        const newTask = await Task.create(req.body);
-        res.json(newTask);
-    } catch (error) {
-        console.log(error);
-        res.status(400).json(error);
-    }
-}
+```
+    //* Import the Task model
+    import Task from "../models/task.model.js";
 
-//? READ
-//* READ ALL TASKS FEATURE
-async function getAllTasks(req, res) {
-    try {
-        const allTasks = await Task.find();
-        res.json(allTasks);
-    } catch (error) {
-        console.log(error);
-        res.status(400).json(error);
-    }
-}
+    const taskController = {
+    //? CRUD Features
+    //! 1. Create a Task feature
+    createTask: async (req, res) => {
+        try {
+            const newTask = await Task.create(req.body);
 
-//* READ ONE TASK FEATURE
-async function getOneTask(req, res) {
-    try {
-        const foundTask = await Task.findById(req.params.id);
-        res.json(foundTask);
-    } catch (error) {
-        console.log(error);
-        res.status(400).json(error);
-    }
-}
+            //* Update User for updating a Task
+            await User.findByIdAndUpdate(newTask.assignedTo, {
+                $push: { tasks: newTask._id }
+            });
 
-//* UPDATE THE TASK FEATURE
-async function updateOneTask(req, res) {
-    const options = {
-        new: true,
-        runValidators: true,
-    };
-    try {
-        const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, options);
-        res.json(updatedTask);
-    } catch (error) {
-        console.log(error);
-        res.status(400).json(error);
-    }
-}
+            res.status(201).json({
+                success: true,
+                message: "✅ Task created successfully ✅",
+                data: newTask
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(400).json({
+                success: false,
+                message: "❌ Task creation failed ❌",
+                error: error,
+            });
+        }
+    },
 
-//* DELETE THE TASK FEATURE
-async function deleteOneTask(req, res) {
-    try {
-        const deletedTask = await Task.findByIdAndDelete(req.params.id);
-        res.json(deletedTask);
-    } catch (error) {
-        console.log(error);
-        res.status(400).json(error);
-    }
-}
+    //! 2. Read All Tasks feature:
+    getAllTasks: async (req, res) => {
+        try {
+            const allTasks = await Task.find().populate("assignedTo", "firstName");
+            res.status(200).json({
+                success: true,
+                message: "✅ All tasks retrieved successfully ✅",
+                allTaskData: allTasks
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(400).json({
+                success: false,
+                message: "❌ All Tasks not found ❌",
+                error: error,
+            });
+        }
+    },
 
-export {
-    createTask,
-    getAllTasks,
-    getOneTask,
-    updateOneTask,
-    deleteOneTask,
+    //! 3. Read One Task feature
+    getOneTask: async (req, res) => {
+        try {
+            const foundTask = await Task.findById(req.params.id);
+            res.status(200).json({
+                success: true,
+                message: "✅ Task found successfully ✅",
+                data: foundTask
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(400).json({
+                success: false,
+                message: "❌ Task not found ❌",
+                error: error,
+            });
+        }
+    },
+
+    //! 4. Update a Task feature
+    updateOneTask: async (req, res) => {
+        const options = {
+            new: true, //* Return the updated document
+            runValidators: true //* Ensure the update follows schema rules
+        };
+        try {
+            const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, options);
+            if (!updatedTask) {
+                return res.status(404).json({
+                    success: false,
+                    message: "❌ Task not found ❌"
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: "✅ Task updated successfully ✅",
+                data: updatedTask
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(400).json({
+                success: false,
+                message: "❌ Task update failed ❌",
+                error: error,
+            });
+        }
+    },
+
+    //* 5. Delete a Task feature
+    deleteOneTask: async (req, res) => {
+        try {
+            const deletedTask = await Task.findByIdAndDelete(req.params.id);
+            if (!deletedTask) {
+                return res.status(404).json({
+                    success: false,
+                    message: "❌ Task not found ❌"
+                });
+            }
+            res.status(200).json({
+                success: true,
+                message: "✅ Task deleted successfully ✅",
+                data: deletedTask
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(400).json({
+                success: false,
+                message: "❌ Task deletion failed ❌",
+               error: error
+            });
+        }
+    }
 };
 
+export default taskController;
+
 ```
-
-12. **Set Uo for `routes` folder:**
-    Inside your `routes` folder, create a new file , naming the file according to your context, project, or assignment.
-    `Example: product.routes.js, user.routes.js, car.routes.js and task.routes.js, etc...`
-    **Note: You should understand when to create a route for each feature defined in the controller.**
-    Here is an example for routes:
-
-    ```
     //* task.routes.js:
 
     //* Import the Router module from Express to create modular and mountable route handlers
     import { Router } from 'express';
 
     //* Import all features from the task controller to the routes
-    import {
-        createTask,
-        getAllTasks,
-        getOneTask,
-        updateOneTask,
-        deleteOneTask,
-    } from '../controllers/task.controller.js';
+    import taskController from "../controllers/task.controller.js";
 
-    //* Create a new Router instance
+    //* Create a new instance from the Router class called `router`
     const router = Router();
+    //? CRUD Features Routes
+    //! 1. Create a Task feature Route
+    router.route("/tasks/create")
+            .post(taskController.createTask)
+      //! 2. Read All Tasks feature Route
+    //* a) Read All Tasks Route
+    router.route("/tasks")
+        .get(taskController.getAllTasks)
 
-    //* Define the routes for the Task features
+    //! 3. Read One Task feature Route
+    router.route("/tasks/:id/details")
+        .get(taskController.getOneTask)
 
-    //* Create Route for Task
-    router
-    .route('/tasks/create')
-    .post(createTask);
+     //! 4. Update One Task feature Route
+     router.route("/tasks/:id/edit")
+           .put(taskController.updateOneTask)
 
-    //* Get All Tasks Route
-    router
-    .route('/tasks')
-    .get(getAllTasks);
-
-    //* Get One Task Route
-    router
-    .route('/tasks/:id')
-    .get(getOneTask);
-
-    //* Update One Task Route
-    router
-    .route('/tasks/:id/edit')
-    .put(updateOneTask);
-
-    //* Delete One Task Route
-    router
-    .route('/tasks/:id/delete')
-    .delete(deleteOneTask);
+    //! 5. Delte One Task feature Route
+    router.route("/tasks/:id/destroy")
+        .delete(taskController.deleteOneTask)
 
     //* Export the router in the main file for the server application called 'server.js'
     export default router;
 
-    Explanation:
+    //* Explanation:
     /tasks/create: Route for creating a new task.
     /tasks: Route for getting all tasks.
-    /tasks/:id: Route for getting a specific task by ID.
+    /tasks/:id/details: Route for getting a specific task by ID.
     /tasks/:id/edit: Route for updating a specific task by ID.
-    /tasks/:id/delete: Route for deleting a specific task by ID.
+    /tasks/:id/destroy: Route for deleting a specific task by ID.
     ```
 
     14. Set Up for `server.js` file:
@@ -338,7 +404,7 @@ export {
 
 ```
 //* server.js
-
+```
 //* Import necessary modules
 import express from 'express';
 import cors from 'cors';
@@ -346,7 +412,7 @@ import dotenv from 'dotenv';
 
 
 //* Import the router from the routes folder
-import router from './routes/product.routes.js';
+import router from './routes/task.routes.js';
 import dbConnect from './config/mongoose.config.js';
 
 
@@ -453,7 +519,6 @@ npm install axios react-router-dom bootstrap
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
 import App from './App.jsx'
 import 'bootstrap/dist/css/bootstrap.css';  //* Paste here the bootstrap 
 import { BrowserRouter } from 'react-router-dom';  //* Paste here
@@ -481,17 +546,20 @@ createRoot(document.getElementById("root")).render(
 //* App.jsx:
 //* Example:
 
-import { Routes, Route } from 'react-router-dom';
-import Home from './views/Home';
-import Tasks from './views/Tasks';
-import TaskDetails from './views/TaskDetails';
+import Header from './components/Header'
+import { Routes, Route } from 'react-router-dom'
+import Home from './Views/Home'
+import Create from './Views/Create'
+import DetailTask from './Views/DetailTask'
+import Update from './Views/Update'
 
 function App() {
     return (
         <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/tasks/:id" element={<TaskDetails />} />
+            <Route path={"/api/tasks"} element={<Home />} />
+            <Route path={"/api/tasks/create"} element={<Create />} />
+            <Route path={"/api/tasks/:id"} element={<DetailTask />} />
+            <Route path={"/api/tasks/edit/:id"} element={<Update />} />
         </Routes>
     );
 }
@@ -507,7 +575,7 @@ my-project-name or my-assignment-name/
 │   ├── src/
 │   │   ├── components/
 │   │   ├── App.css
-│   │   ├── views/
+│   │   ├── Views/
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
