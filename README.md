@@ -606,7 +606,7 @@ my-project-name or my-assignment-name/
 │   ├── src/
 │   │   ├── components/
 │   │   ├── App.css
-│   │   ├── views/
+│   │   ├── Views/
 │   │   ├── App.jsx
 │   │   ├── main.jsx
 │   │   └── index.css
