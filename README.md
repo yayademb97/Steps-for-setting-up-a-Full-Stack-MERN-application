@@ -110,7 +110,7 @@ npm install express mongoose cors dotenv
 
    ```
    node_modules
-   .gitignore
+   .env
    ```
 9. **DB Connect with your server application:**
    Inside your `config` folder, create a new file called  `mongoose.config.js` and paste the following code:
