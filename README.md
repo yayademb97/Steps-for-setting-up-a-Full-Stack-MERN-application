@@ -242,11 +242,6 @@ import Task from "../models/task.model.js";
         try {
             const newTask = await Task.create(req.body);
 
-            //* Update User for updating a Task
-            await User.findByIdAndUpdate(newTask.assignedTo, {
-                $push: { tasks: newTask._id }
-            });
-
             res.status(201).json({
                 success: true,
                 message: "✅ Task created successfully ✅",
@@ -265,7 +260,7 @@ import Task from "../models/task.model.js";
     //! 2. Read All Tasks feature:
     getAllTasks: async (req, res) => {
         try {
-            const allTasks = await Task.find().populate("assignedTo", "firstName");
+            const allTasks = await Task.find();
             res.status(200).json({
                 success: true,
                 message: "✅ All tasks retrieved successfully ✅",
