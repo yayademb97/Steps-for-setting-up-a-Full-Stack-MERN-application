@@ -47,7 +47,7 @@ Here are the different steps to help you set up your MERN application.
    Install the necessary packages for the backend, including Express, Mongoose, CORS, and dotenv:
 
 ```
-npm install express mongoose cors dotenv
+npm install express mongoose cors dotenv --save-dev nodemon
 ```
 
    After running this command, a `package-lock.json`  file and a `node_modules`  folder will be automatically generated.
@@ -55,28 +55,30 @@ npm install express mongoose cors dotenv
    
    //* Correct file for `package.json` 
    ```
-     {
-       "name": "server",
-       "version": "1.0.0",
-       "description": "",
-       "main": "server.js",
-       "scripts": {
-         "test": "echo \"Error: no test specified\" && exit 1",
-         "start": "node server.js",
-         "dev": "npx nodemon"
-      },
-       "keywords": [],
-       "author": "",
-       "license": "ISC",
-       "type": "module",
+   {
+      "name": "server",
+      "version": "1.0.0",
+      "description": "",
+      "main": "server.js",
+      "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "start": "node server.js",
+      "dev": "npx nodemon"
+    },
+      "keywords": [],
+      "author": "",
+      "license": "ISC",
+      "type": "module",
       "dependencies": {
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.7",
-        "express": "^4.21.2",
-        "mongoose": "^8.13.0",
-        "nodemon": "^3.1.9"
-     }
-   }
+      "dotenv": "^16.5.0",
+      "express": "^5.1.0",
+      "mongoose": "^8.15.1",
+      "cors": "^2.8.5",
+    },
+      "devDependencies": {
+      "nodemon": "^3.1.10"
+    }
+  }
 
    ```
 
@@ -101,9 +103,9 @@ npm install express mongoose cors dotenv
    * Define the PORT for the server:
    PORT = 8000
    * PASTE THE MONGODB CONNECTION STRING LINK HERE
-   MONGO_URI = <your-mongodb-connection-string>  //* Paste here your mongo connection string from YOUR MONGO DB ATLAS ACCOUNT
+   MONGODB_URI = <your-mongodb-connection-string>  //* Paste here your mongo connection string from YOUR MONGO DB ATLAS ACCOUNT
    * Specify The DB NAME
-   DB = database_name
+   DB_NAME = "database_name"
 
    ```
 8. **Set Up for `.gitignore` file:**
@@ -125,8 +127,8 @@ npm install express mongoose cors dotenv
    dotenv.config();
 
    //* Extract MongoDB URI and database name from environment variables
-   const MONGO_URI = process.env.MONGO_URI; // MongoDB URI
-   const DB = process.env.DB; // Database name
+   const MONGODB_URI = process.env.MONGODB_URI; // MongoDB URI
+   const DB_NAME = process.env.DB_NAME; // Database name
 
    /**
     * Establish a connection to MongoDB database
@@ -136,10 +138,10 @@ npm install express mongoose cors dotenv
 
    async function dbConnect() {
        try {
-           await connect(MONGO_URI, {
-               dbName: DB,
+           await connect(MONGODB_URI, {
+               dbName: DB_NAME,
            });
-           console.log(`Pinged your deployment. You successfully connected to MongoDB! and your DB is : ${DB}`);
+           console.log(`Pinged your deployment. You successfully connected to MongoDB! and your DB is : ${DB_NAME}`);
        } catch (error) {
            console.log(error);
            throw error;
@@ -182,11 +184,11 @@ const TaskSchema = new Schema(
             maxLength: [500, "{PATH} of Task must be at most 500 characters long!"],
         },
         //* Task Status
-        status: {
+        priority: {
             type: String, // * Data type for the task status
-            enum: ['Not Started', 'In Progress', 'Completed'], // * Valid values for task status
+            enum: ['Important', 'Normal', 'Critical'], // * Valid values for task status
             required: [true, "{PATH} of Task is required"],
-            default: 'Not Started', // * Default value for task status
+            default: 'Normal', // * Default value for task priority
         },
         //* Due Date
         dueDate: {
